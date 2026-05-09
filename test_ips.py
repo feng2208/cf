@@ -7,6 +7,7 @@ import subprocess
 
 URL_PREFIX = os.environ.get('URL_PREFIX')
 TARGET_URL = os.environ.get('TARGET_URL')
+USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:150.0) Gecko/20100101 Firefox/150.0"
 
 def test_ip_port(ip_port):
     """
@@ -19,6 +20,7 @@ def test_ip_port(ip_port):
     
     cmd = [
         "curl", "-s", "-o", "/dev/null", "-w", "%{http_code}",
+        "-H", f"User-Agent: {USER_AGENT}",
         "--connect-to", f"::{ip}:{port}",
         "--connect-timeout", "5",
         "-m", "10",
@@ -43,6 +45,7 @@ def process_file(filename):
     print(f"[{filename}] Downloading {url}...")
     try:
         req = urllib.request.Request(url)
+        req.add_header('User-Agent', USER_AGENT)
         with urllib.request.urlopen(req) as response:
             data = json.loads(response.read().decode('utf-8'))
     except Exception as e:

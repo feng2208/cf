@@ -27,13 +27,23 @@ jobs:
           TARGET_URL: 'https://example.org'
         run: python test_ips.py
 
-      - name: Commit and push changes
+      - name: Commit, push and upload changes
+        env:
+          UPLOAD_URL: ${{ secrets.UPLOAD_URL }}
+          UPLOAD_PASSWORD: ${{ secrets.UPLOAD_PASSWORD }}
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
           
           git add *.json
           if ! git diff --cached --quiet; then
+            git diff --cached --name-only -- '*.json' | while IFS= read -r file; do
+              if [ -n "$file" ]; then
+                echo "Uploading $file to remote service..."
+                curl -s -S -X POST -F "file=@$file" -F "password=$UPLOAD_PASSWORD" "$UPLOAD_URL"
+              fi
+            done
+            
             git commit -m "Auto-update"
             git push
           else
